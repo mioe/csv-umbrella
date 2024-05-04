@@ -1,8 +1,7 @@
 <script setup>
 import { availableLocales, loadLanguageAsync } from '~/modules/vue-i18n'
+import Header from '~/components/Header.vue'
 
-const router = useRouter()
-const routes = router.options.routes
 const { t, locale } = useI18n()
 
 async function toggleLocales() {
@@ -13,28 +12,13 @@ async function toggleLocales() {
 }
 
 useHead({
-	title: 'My awesome site',
+	title: 'CSV Umbrella',
 })
 </script>
 
 <template>
-	<header class="flex gap-[16px] p-[8px]">
-		<RouterLink
-			v-for="route in routes"
-			:key="route.name"
-			:to="{ name: route.name }"
-		>
-			{{ route.name }}
-		</RouterLink>
-	</header>
-
-	<div class="p-[8px]">
-		<p>i18n test</p>
-		<p>hello: {{ t('hello') }}</p>
-		<button @click="toggleLocales">
-			toggleLocales: {{ locale }}
-		</button>
-	</div>
-
-	<RouterView />
+	<main class="relative min-w-full flex flex-col min-h-dvh">
+		<Header />
+		<RouterView />
+	</main>
 </template>
