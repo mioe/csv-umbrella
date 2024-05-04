@@ -4,7 +4,6 @@ import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import Unocss from 'unocss/vite'
-import Pages from 'vite-plugin-pages'
 import VueI18n from '@intlify/unplugin-vue-i18n/vite'
 import AutoImport from 'unplugin-auto-import/vite'
 import { unheadVueComposablesImports } from '@unhead/vue'
@@ -31,9 +30,6 @@ export default defineConfig(({ command, mode }) => {
 
 			// https://github.com/unocss/unocss
 			Unocss(),
-
-			// https://github.com/hannoeru/vite-plugin-pages
-			Pages(),
 
 			// https://github.com/intlify/bundle-tools/tree/main/packages/unplugin-vue-i18n
 			VueI18n({

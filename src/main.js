@@ -12,7 +12,6 @@ import './style.css'
  */
 import { head } from './modules/unhead'
 import { i18n, loadLanguageAsync, getDefaultLocale } from './modules/vue-i18n'
-import { router } from './modules/vue-router'
 
 /**
  * init app
@@ -20,7 +19,6 @@ import { router } from './modules/vue-router'
 createApp(App)
 	.use(i18n)
 	.use(head)
-	.use(router)
 	.mount('#app')
 
 /**
