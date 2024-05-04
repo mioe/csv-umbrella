@@ -7,16 +7,37 @@ const props = defineProps({
 const emit = defineEmits(['update:csv'])
 const { csv } = useVModels(props, emit)
 
-const tableRef = ref()
-
+const tableRef = shallowRef()
 const table = reactive({
 	checkboxes: [],
 	lastChecked: null,
 })
 
+const mainCheckboxRef = shallowRef()
+
+const handleMainCheckboxCheck = ev => {
+	table.checkboxes.forEach(box => box.checked = ev.target.checked)
+}
+
+const onChangeMainCheckbox = () => {
+	const countChecked = tableRef.value.querySelectorAll('input:checked').length
+	const countAllBox = table.checkboxes.length
+	if (countChecked === 0) {
+		mainCheckboxRef.value.checked = false
+		mainCheckboxRef.value.indeterminate = false
+	} else if (countChecked === countAllBox.length) {
+		mainCheckboxRef.value.checked = true
+		mainCheckboxRef.value.indeterminate = false
+	} else {
+		mainCheckboxRef.value.checked = false
+		mainCheckboxRef.value.indeterminate = true
+	}
+}
+
 const handleCheck = ev => {
 	if (!table.lastChecked) {
 		table.lastChecked = ev.target
+		onChangeMainCheckbox()
 		return
 	}
 
@@ -32,6 +53,7 @@ const handleCheck = ev => {
 	}
 
 	table.lastChecked = ev.target
+	onChangeMainCheckbox()
 }
 
 onUpdated(() => {
@@ -43,14 +65,31 @@ onUpdated(() => {
 
 <template>
 	<div class="relative overflow-auto p-4">
-		<table ref="tableRef">
-			<tbody>
+		<table>
+			<thead v-if="csv">
+				<tr>
+					<th>
+						<input
+							ref="mainCheckboxRef"
+							type="checkbox"
+							@click="handleMainCheckboxCheck"
+						/>
+					</th>
+					<th
+						v-for="(_col, colIdx) in csv[0]"
+						:key="colIdx"
+					>
+						{{ colIdx }}
+					</th>
+				</tr>
+			</thead>
+			<tbody ref="tableRef">
 				<tr
 					v-for="(row, rowIdx) in csv"
 					:key="rowIdx"
 				>
 					<td>
-						<input type="checkbox">
+						<input type="checkbox" />
 					</td>
 					<td
 						v-for="(col, colIdx) in row"
