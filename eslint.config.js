@@ -8,6 +8,14 @@ export default [
 	unocss,
 
 	{
+		ignores: [
+			'**/node_modules/',
+			'.git/',
+			'dist/',
+			'public/',
+		],
+	},
+	{
 		rules: {
 			'comma-dangle': ['error', 'always-multiline'],
 			'no-return-await': 'off',
