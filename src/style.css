@@ -21,7 +21,7 @@
 *,
 *::before,
 *::after {
-	box-sizing: border-box
+	box-sizing: border-box;
 }
 
 /* remove default padding */
@@ -61,8 +61,6 @@ a {
 /* set core body defaults */
 body {
 	min-height: 100vh;
-	display: flex;
-	flex-direction: column;
 }
 
 /* remove list styles on ul, ol elements with a class attribute */
