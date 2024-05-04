@@ -1,30 +1,40 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
+import { availableLocales, loadLanguageAsync } from '~/modules/vue-i18n'
+
+const router = useRouter()
+const routes = router.options.routes
+const { t, locale } = useI18n()
+
+async function toggleLocales() {
+	const locales = availableLocales
+	const newLocale = locales[(locales.indexOf(locale.value) + 1) % locales.length]
+	await loadLanguageAsync(newLocale)
+	locale.value = newLocale
+}
+
+useHead({
+	title: 'My awesome site',
+})
 </script>
 
 <template>
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
-  </div>
-  <HelloWorld msg="Vite + Vue" />
-</template>
+	<header class="flex gap-[16px] p-[8px]">
+		<RouterLink
+			v-for="route in routes"
+			:key="route.name"
+			:to="{ name: route.name }"
+		>
+			{{ route.name }}
+		</RouterLink>
+	</header>
 
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
-</style>
+	<div class="p-[8px]">
+		<p>i18n test</p>
+		<p>hello: {{ t('hello') }}</p>
+		<button @click="toggleLocales">
+			toggleLocales: {{ locale }}
+		</button>
+	</div>
+
+	<RouterView />
+</template>
