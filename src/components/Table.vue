@@ -64,41 +64,52 @@ onUpdated(() => {
 </script>
 
 <template>
-	<div class="relative overflow-auto p-4">
-		<table>
-			<thead v-if="csv">
-				<tr>
-					<th>
-						<input
-							ref="mainCheckboxRef"
-							type="checkbox"
-							@click="handleMainCheckboxCheck"
-						/>
-					</th>
-					<th
-						v-for="(_col, colIdx) in csv[0]"
-						:key="colIdx"
+	<div class="table-wrapper">
+		<div class="table-container">
+			<table>
+				<thead v-if="csv">
+					<tr>
+						<th>
+							<input
+								ref="mainCheckboxRef"
+								type="checkbox"
+								@click="handleMainCheckboxCheck"
+							/>
+						</th>
+						<th
+							v-for="(_col, colIdx) in csv[0]"
+							:key="colIdx"
+						>
+							{{ colIdx }}
+						</th>
+					</tr>
+				</thead>
+				<tbody ref="tableRef">
+					<tr
+						v-for="(row, rowIdx) in csv"
+						:key="rowIdx"
 					>
-						{{ colIdx }}
-					</th>
-				</tr>
-			</thead>
-			<tbody ref="tableRef">
-				<tr
-					v-for="(row, rowIdx) in csv"
-					:key="rowIdx"
-				>
-					<td>
-						<input type="checkbox" />
-					</td>
-					<td
-						v-for="(col, colIdx) in row"
-						:key="colIdx"
-					>
-						{{ col }}
-					</td>
-				</tr>
-			</tbody>
-		</table>
+						<td>
+							<input type="checkbox" />
+						</td>
+						<td
+							v-for="(col, colIdx) in row"
+							:key="colIdx"
+						>
+							{{ col }}
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
 	</div>
 </template>
+
+<style>
+.table-wrapper {
+	position: relative;
+	overflow: hidden;
+	border-radius: 16px;
+	border: 1px solid #e5ebf0;
+}
+</style>

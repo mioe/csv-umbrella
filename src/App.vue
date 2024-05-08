@@ -1,7 +1,6 @@
 <script setup>
 import { availableLocales, loadLanguageAsync } from '~/modules/vue-i18n'
 import { useFileDialog } from '@vueuse/core'
-import Header from '~/components/Header.vue'
 import Table from '~/components/Table.vue'
 
 useHead({
@@ -44,9 +43,7 @@ onChange((files) => {
 </script>
 
 <template>
-	<main class="relative min-h-dvh">
-		<Header />
-
+	<main class="relative h-dvh w-dvw flex items-center justify-center">
 		<button
 			v-if="!files"
 			type="button"
@@ -55,10 +52,14 @@ onChange((files) => {
 			{{ $t('choose-file') }}
 		</button>
 
-		<Table
+		<div
 			v-else
-			:csv="csvData"
-			@update:csv="$ev => (csvData = $ev)"
-		/>
+			class="w-[calc(100svw-48px)] h-[calc(100svh-48px)]"
+		>
+			<Table
+				:csv="csvData"
+				@update:csv="$ev => (csvData = $ev)"
+			/>
+		</div>
 	</main>
 </template>
