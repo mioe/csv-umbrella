@@ -54,7 +54,7 @@ onChange((files) => {
 
 		<div
 			v-else
-			class="w-[calc(100svw-48px)] h-[calc(100svh-48px)]"
+			class="w-[calc(100svw-48px)] h-[calc(100svh-48px)] flex flex-col"
 		>
 			<Table
 				:csv="csvData"
