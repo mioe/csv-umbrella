@@ -40,6 +40,29 @@ const sysField = reactive([
 ])
 
 const customField = useStorage('csv-custom-field', [])
+const customFieldType = ['string', 'date', 'number']
+const customFieldForm = reactive({
+	name: null,
+	type: null,
+})
+function onResetCustomFieldForm() {
+	Object.keys(customFieldForm).forEach((key) => {
+		customFieldForm[key] = null
+	})
+}
+function handleAddCustomField() {
+	const { name, type } = customFieldForm
+	customField.value.push({
+		name,
+		type: type ?? customFieldType[0],
+		id: crypto.randomUUID(),
+	})
+	onResetCustomFieldForm()
+}
+function handleRemoveCustomFieldById(id) {
+	const fFieldIdx = customField.value.findIndex((field) => field.id === id)
+	customField.value.splice(fFieldIdx, 1)
+}
 
 const { files, open, onChange } = useFileDialog({
 	accept: '.csv',
@@ -87,13 +110,14 @@ onChange((files) => {
 							v-for="field in sysField"
 							:key="field.id"
 						>
-							<td>{{ field.name }}</td>
+							<td>{{ $t(`sys-field-name.${field.name}`) }}</td>
 							<td
 								class="rounded p-2 text-2 font-mono"
 								:class="{
 									'bg-blue-300 c-blue-800': field.type === 'phone',
 									'bg-pink-800 c-pink-200': field.type === 'date',
 									'bg-green-900 c-green-200': field.type === 'string',
+									'bg-orange-900 c-orange-200': field.type === 'number',
 								}"
 							>
 								{{ field.type }}
@@ -110,15 +134,63 @@ onChange((files) => {
 					<table>
 						<tbody>
 							<tr
-								v-for="field in sysField"
+								v-for="field in customField"
 								:key="field.id"
 							>
 								<td>{{ field.name }}</td>
-								<td>{{ field.type }}</td>
-								<td>{{ field.id }}</td>
+								<td
+									class="rounded p-2 text-2 font-mono"
+									:class="{
+										'bg-blue-300 c-blue-800': field.type === 'phone',
+										'bg-pink-800 c-pink-200': field.type === 'date',
+										'bg-green-900 c-green-200': field.type === 'string',
+										'bg-orange-900 c-orange-200': field.type === 'number',
+									}"
+								>
+									{{ field.type }}
+								</td>
+								<td class="text-2 font-mono">
+									{{ field.id }}
+								</td>
+								<td>
+									<button @click="handleRemoveCustomFieldById(field.id)">
+										{{ $t('remove') }}
+									</button>
+								</td>
 							</tr>
 						</tbody>
 					</table>
+					<form
+						class="flex gap-2"
+						@submit.prevent="handleAddCustomField"
+					>
+						<input
+							v-model="customFieldForm.name"
+							type="text"
+							:placeholder="$t('new-field-name')"
+							required
+						/>
+						<select
+							v-model="customFieldForm.type"
+						>
+							<option
+								:value="null"
+								disabled
+							>
+								{{ $t('type-field') }}
+							</option>
+							<option
+								v-for="t in customFieldType"
+								:key="t"
+								:value="t"
+							>
+								{{ t }}
+							</option>
+						</select>
+						<button type="submit">
+							{{ $t('add') }}
+						</button>
+					</form>
 				</div>
 			</div>
 
