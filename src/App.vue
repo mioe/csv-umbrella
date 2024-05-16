@@ -1,6 +1,5 @@
 <script setup>
 import { availableLocales, loadLanguageAsync } from '~/modules/vue-i18n'
-import { useFileDialog } from '@vueuse/core'
 import Table from '~/components/Table.vue'
 
 useHead({
@@ -22,7 +21,27 @@ async function toggleLocales() {
 	locale.value = newLocale
 }
 
-const { files, open, reset, onChange } = useFileDialog({
+const sysField = reactive([
+	{
+		name: 'phone',
+		type: 'phone',
+		id: '09195a3e-96d3-4de4-b5df-dd358398fdcd',
+	},
+	{
+		name: 'birthday',
+		type: 'date',
+		id: '99b2f8ec-adf1-44e6-b242-fd9005d6f73c',
+	},
+	{
+		name: 'name',
+		type: 'string',
+		id: '0c45dac3-d904-435a-9573-e58f9854cd91',
+	},
+])
+
+const customField = useStorage('csv-custom-field', [])
+
+const { files, open, onChange } = useFileDialog({
 	accept: '.csv',
 	multiple: false,
 })
@@ -62,12 +81,45 @@ onChange((files) => {
 
 			<div>
 				<h4>{{ $t('sys-field') }}</h4>
-				<p></p>
-			</div>
+				<table>
+					<tbody>
+						<tr
+							v-for="field in sysField"
+							:key="field.id"
+						>
+							<td>{{ field.name }}</td>
+							<td
+								class="rounded p-2 text-2 font-mono"
+								:class="{
+									'bg-blue-300 c-blue-800': field.type === 'phone',
+									'bg-pink-800 c-pink-200': field.type === 'date',
+									'bg-green-900 c-green-200': field.type === 'string',
+								}"
+							>
+								{{ field.type }}
+							</td>
+							<td class="text-2 font-mono">
+								{{ field.id }}
+							</td>
+						</tr>
+					</tbody>
+				</table>
 
-			<div>
-				<h4>{{ $t('custom-field') }} (via localstorage)</h4>
-				<p></p>
+				<div>
+					<h4>{{ $t('custom-field') }} (via localstorage)</h4>
+					<table>
+						<tbody>
+							<tr
+								v-for="field in sysField"
+								:key="field.id"
+							>
+								<td>{{ field.name }}</td>
+								<td>{{ field.type }}</td>
+								<td>{{ field.id }}</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
 			</div>
 
 			<footer>

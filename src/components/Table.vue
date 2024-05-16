@@ -14,6 +14,7 @@ const table = reactive({
 })
 
 const mainCheckboxRef = shallowRef()
+const maxColsInRow = computed(() => csv.value.reduce((max, row) => Math.max(max, row.length), 0))
 
 const handleMainCheckboxCheck = ev => {
 	table.checkboxes.forEach(box => box.checked = ev.target.checked)
@@ -66,21 +67,30 @@ onUpdated(() => {
 <template>
 	<div class="ghost-white table-wrapper">
 		<div class="table-container">
-			<table>
-				<thead v-if="csv">
+			<table class="table-custom">
+				<thead
+					v-if="csv"
+					class="table-head"
+				>
 					<tr>
-						<th>
-							<input
-								ref="mainCheckboxRef"
-								type="checkbox"
-								@click="handleMainCheckboxCheck"
-							/>
+						<th class="col-check">
+							<div class="col-primary-check">
+								<input
+									ref="mainCheckboxRef"
+									type="checkbox"
+									@click="handleMainCheckboxCheck"
+								/>
+								<div class="col-primary-check--tool">
+								</div>
+							</div>
 						</th>
 						<th
-							v-for="(_col, colIdx) in csv[0]"
+							v-for="(_col, colIdx) in maxColsInRow"
 							:key="colIdx"
 						>
-							{{ colIdx }}
+							<div class="col-body">
+								{{ colIdx }}
+							</div>
 						</th>
 					</tr>
 				</thead>
@@ -89,14 +99,19 @@ onUpdated(() => {
 						v-for="(row, rowIdx) in csv"
 						:key="rowIdx"
 					>
-						<td>
+						<td class="col-check">
 							<input type="checkbox" />
 						</td>
 						<td
 							v-for="(col, colIdx) in row"
 							:key="colIdx"
 						>
-							{{ col }}
+							<div
+								class="col-body"
+								:title="col"
+							>
+								{{ col }}
+							</div>
 						</td>
 					</tr>
 				</tbody>
@@ -115,5 +130,51 @@ onUpdated(() => {
 	position: relative;
 	overflow: auto;
 	height: 100%;
+}
+
+.table-head {
+	position: sticky;
+	z-index: 9;
+	top: 0;
+	background-color: white;
+	width: 100%;
+	border-bottom: 1px solid #e5ebf0;
+}
+
+.table-custom {
+	all: unset;
+}
+
+.col-body {
+	min-width: 200px;
+	max-width: 300px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.col-primary-check {
+	height: 64px;
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.col-primary-check--tool {
+	position: absolute;
+	z-index: 2;
+	/* background-color: red; */
+	width: 100px;
+	height: 100%;
+	left: 100%;
+}
+
+.col-check {
+	position: sticky;
+	left: 0;
+	background-color: white;
+	padding: 0 8px;
+	border-left: 1px solid #e5ebf0;
 }
 </style>
