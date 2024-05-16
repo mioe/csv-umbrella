@@ -13,7 +13,7 @@ const CSVToArray = (data, delimiter = ',', omitFirstRow = false) =>
 		.split('\n')
 		.map(v => v.split(delimiter))
 
-const { t, locale } = useI18n()
+const { locale } = useI18n()
 
 async function toggleLocales() {
 	const locales = availableLocales
@@ -43,18 +43,43 @@ onChange((files) => {
 </script>
 
 <template>
-	<main class="relative h-dvh w-dvw flex items-center justify-center">
-		<button
+	<main class="relative w-dvw flex items-center justify-center h-dvh">
+		<div
 			v-if="!files"
-			type="button"
-			@click="open"
+			class="ghost-white min-w-lg flex flex-col items-center justify-center gap-4 p-4"
 		>
-			{{ $t('choose-file') }}
-		</button>
+			<header class="text-center">
+				<h1>CSV Umbrella</h1>
+				<p>{{ $t('about') }}</p>
+			</header>
+
+			<button
+				type="button"
+				@click="open"
+			>
+				{{ $t('choose-file') }}
+			</button>
+
+			<div>
+				<h4>{{ $t('sys-field') }}</h4>
+				<p></p>
+			</div>
+
+			<div>
+				<h4>{{ $t('custom-field') }} (via localstorage)</h4>
+				<p></p>
+			</div>
+
+			<footer>
+				<button @click="toggleLocales">
+					{{ locale }}
+				</button>
+			</footer>
+		</div>
 
 		<div
 			v-else
-			class="w-[calc(100svw-48px)] h-[calc(100svh-48px)] flex flex-col"
+			class="h-[calc(100svh-48px)] w-[calc(100svw-48px)] flex flex-col"
 		>
 			<Table
 				:csv="csvData"

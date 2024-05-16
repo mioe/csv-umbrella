@@ -64,7 +64,7 @@ onUpdated(() => {
 </script>
 
 <template>
-	<div class="table-wrapper">
+	<div class="ghost-white table-wrapper">
 		<div class="table-container">
 			<table>
 				<thead v-if="csv">
@@ -109,11 +109,6 @@ onUpdated(() => {
 .table-wrapper {
 	position: relative;
 	overflow: hidden;
-	border-radius: 16px;
-	border: 1px solid #e5ebf0;
-	backdrop-filter: blur(25px);
-	-webkit-backdrop-filter: blur(25px);
-	background-color: rgba(255,255,255,.9);
 }
 
 .table-container {

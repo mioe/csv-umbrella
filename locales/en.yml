@@ -1,3 +1,6 @@
 hello: 'hello'
 choose-file: 'Choose file'
 reset: 'Reset'
+about: 'Experimental project for uploading and formatting CSV files'
+sys-field: 'System columns'
+custom-field: 'User columns'
