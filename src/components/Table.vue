@@ -1,8 +1,11 @@
 <script setup>
 import { useVModels } from '@vueuse/core'
+import ColumnPicker from '~/components/ColumnPicker.vue'
 
 const props = defineProps({
 	csv: Array,
+	sysField: Array,
+	customField: Array,
 })
 const emit = defineEmits(['update:csv'])
 const { csv } = useVModels(props, emit)
@@ -89,7 +92,9 @@ onUpdated(() => {
 							:key="colIdx"
 						>
 							<div class="col-body">
-								{{ colIdx }}
+								<ColumnPicker
+									:popid="colIdx"
+								/>
 							</div>
 						</th>
 					</tr>
@@ -143,11 +148,16 @@ onUpdated(() => {
 
 .table-custom {
 	all: unset;
+	display: table;
+}
+
+.table-custom th {
+	text-align: left;
 }
 
 .col-body {
 	min-width: 200px;
-	max-width: 300px;
+	max-width: 200px;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;

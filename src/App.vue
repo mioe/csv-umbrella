@@ -206,6 +206,8 @@ onChange((files) => {
 			class="h-[calc(100svh-48px)] w-[calc(100svw-48px)] flex flex-col"
 		>
 			<Table
+				:sys-field="sysField"
+				:custom-field="customField"
 				:csv="csvData"
 				@update:csv="$ev => (csvData = $ev)"
 			/>
