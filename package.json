@@ -13,6 +13,7 @@
 		"lint": "eslint ."
 	},
 	"dependencies": {
+		"@floating-ui/vue": "^1.0.6",
 		"@unhead/vue": "^1.9.10",
 		"@vueuse/core": "^10.9.0",
 		"vue": "^3.4.27",
@@ -22,11 +23,11 @@
 		"@eslint/js": "^9.3.0",
 		"@iconify/utils": "^2.1.23",
 		"@intlify/unplugin-vue-i18n": "^4.0.0",
-		"@unocss/eslint-config": "^0.60.2",
+		"@unocss/eslint-config": "^0.60.3",
 		"@vitejs/plugin-vue": "^5.0.4",
 		"eslint": "^9.3.0",
 		"eslint-plugin-vue": "^9.26.0",
-		"unocss": "^0.60.2",
+		"unocss": "^0.60.3",
 		"unplugin-auto-import": "^0.17.6",
 		"vite": "^5.2.11",
 		"vite-plugin-pwa": "^0.20.0"

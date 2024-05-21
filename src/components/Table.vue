@@ -7,17 +7,33 @@ const props = defineProps({
 	sysField: Array,
 	customField: Array,
 })
+
 const emit = defineEmits(['update:csv'])
+
+const { t: $t } = useI18n()
 const { csv } = useVModels(props, emit)
 
 const tableRef = shallowRef()
 const table = reactive({
 	checkboxes: [],
 	lastChecked: null,
+	columns: [],
 })
 
 const mainCheckboxRef = shallowRef()
 const maxColsInRow = computed(() => csv.value.reduce((max, row) => Math.max(max, row.length), 0))
+const fields = computed(() => [
+	...props.sysField.map(
+		f => ({...f, name: $t(`sys-field-name.${f.name}`)}),
+	),
+	...props.customField,
+])
+
+const initTableCheckbox = () => {
+	console.log('🦕 initTableCheckbox')
+	table.checkboxes = tableRef.value.querySelectorAll('input[type="checkbox"]')
+	table.checkboxes.forEach(checkbox => checkbox.addEventListener('click', handleCheck))
+}
 
 const handleMainCheckboxCheck = ev => {
 	table.checkboxes.forEach(box => box.checked = ev.target.checked)
@@ -60,10 +76,40 @@ const handleCheck = ev => {
 	onChangeMainCheckbox()
 }
 
+const btnColumnRef = shallowRef([])
+const columnPickerRef = shallowRef()
+
+/**
+ * Lazy init of columns array
+ */
+const initColumnSlots = () => {
+	for (let i = 0; i < maxColsInRow.value; i++) {
+		table.columns.push(null)
+	}
+}
+
+const handleSelectColumn = async(idx) => {
+	const target = btnColumnRef.value[idx]
+	if (!table.columns.length) {
+		initColumnSlots()
+	}
+	await nextTick()
+	const socks = table.columns[idx]
+	const result = await columnPickerRef.value.open(target, socks)
+	if (result.ev === 'select') {
+		table.columns[idx] = result.value
+	}
+}
+
 onUpdated(() => {
 	console.log('🦕 onUpdated')
-	table.checkboxes = tableRef.value.querySelectorAll('input[type="checkbox"]')
-	table.checkboxes.forEach(checkbox => checkbox.addEventListener('click', handleCheck))
+	if (!table.checkboxes.length) {
+		initTableCheckbox()
+	}
+})
+
+onMounted(() => {
+	console.log('🦕 onMounted')
 })
 </script>
 
@@ -84,6 +130,7 @@ onUpdated(() => {
 									@click="handleMainCheckboxCheck"
 								/>
 								<div class="col-primary-check--tool">
+									todo
 								</div>
 							</div>
 						</th>
@@ -92,11 +139,20 @@ onUpdated(() => {
 							:key="colIdx"
 						>
 							<div class="col-body">
-								<ColumnPicker
-									:popid="colIdx"
-								/>
+								<button
+									ref="btnColumnRef"
+									@click="handleSelectColumn(colIdx)"
+								>
+									{{ table.columns[colIdx] ? table.columns[colIdx].name : $t('select-column') }}
+								</button>
 							</div>
 						</th>
+
+						<ColumnPicker
+							ref="columnPickerRef"
+							:fields="fields"
+							:columns="table.columns"
+						/>
 					</tr>
 				</thead>
 				<tbody ref="tableRef">

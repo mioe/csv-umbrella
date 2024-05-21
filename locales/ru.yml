@@ -12,3 +12,5 @@ sys-field-name:
   name: 'Имя'
 new-field-name: 'Новое название колонки'
 type-field: 'Тип колонки'
+select-column: 'Выберете колонку'
+all-selected: 'Все выбрано'

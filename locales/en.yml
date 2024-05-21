@@ -12,3 +12,5 @@ sys-field-name:
   name: 'Name'
 new-field-name: 'New name columns'
 type-field: 'Type column'
+select-column: 'Select column'
+all-selected: 'All selected'

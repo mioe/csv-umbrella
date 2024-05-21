@@ -72,5 +72,6 @@ img {
 	border: 1px solid #e5ebf0;
 	backdrop-filter: blur(25px);
 	-webkit-backdrop-filter: blur(25px);
-	background-color: rgba(255,255,255,.8);
+	background-color: hsla(0, 0%, 100%, .8);
 }
+
