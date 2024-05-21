@@ -64,14 +64,19 @@ function handleRemoveCustomFieldById(id) {
 	customField.value.splice(fFieldIdx, 1)
 }
 
-const { files, open, onChange } = useFileDialog({
+const { files, open, reset, onChange } = useFileDialog({
 	accept: '.csv',
 	multiple: false,
 })
 
 const csvData = ref()
 
-onChange((files) => {
+function onResetFile() {
+	reset()
+	csvData.value = undefined
+}
+
+onChange(async(files) => {
 	if (files) {
 		const reader = new FileReader()
 		reader.readAsText(files[0], 'UTF-8')
@@ -210,6 +215,7 @@ onChange((files) => {
 				:custom-field="customField"
 				:csv="csvData"
 				@update:csv="$ev => (csvData = $ev)"
+				@reset="onResetFile"
 			/>
 		</div>
 	</main>

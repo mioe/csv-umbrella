@@ -8,7 +8,10 @@ const props = defineProps({
 	customField: Array,
 })
 
-const emit = defineEmits(['update:csv'])
+const emit = defineEmits([
+	'update:csv',
+	'reset',
+])
 
 const { t: $t } = useI18n()
 const { csv } = useVModels(props, emit)
@@ -28,6 +31,7 @@ const fields = computed(() => [
 	),
 	...props.customField,
 ])
+const selectedRows = ref([])
 
 const initTableCheckbox = () => {
 	console.log('🦕 initTableCheckbox')
@@ -37,6 +41,7 @@ const initTableCheckbox = () => {
 
 const handleMainCheckboxCheck = ev => {
 	table.checkboxes.forEach(box => box.checked = ev.target.checked)
+	toggleCheckbox({ ev: ev.target.checked ? 'all' : 'none' })
 }
 
 const onChangeMainCheckbox = () => {
@@ -45,13 +50,23 @@ const onChangeMainCheckbox = () => {
 	if (countChecked === 0) {
 		mainCheckboxRef.value.checked = false
 		mainCheckboxRef.value.indeterminate = false
+		toggleCheckbox({ ev: 'none' })
 	} else if (countChecked === countAllBox.length) {
 		mainCheckboxRef.value.checked = true
 		mainCheckboxRef.value.indeterminate = false
+		toggleCheckbox({ ev: 'all' })
 	} else {
 		mainCheckboxRef.value.checked = false
 		mainCheckboxRef.value.indeterminate = true
+		toggleCheckbox({ ev: 'some' })
 	}
+}
+
+const onResetCheckbox = () => {
+	mainCheckboxRef.value.checked = false
+	mainCheckboxRef.value.indeterminate = false
+	tableRef.value.querySelectorAll('input:checked').forEach((el) => el.checked = false)
+	selectedRows.value = []
 }
 
 const handleCheck = ev => {
@@ -83,6 +98,8 @@ const columnPickerRef = shallowRef()
  * Lazy init of columns array
  */
 const initColumnSlots = () => {
+	console.log('🦕 initColumnSlots')
+	table.columns = []
 	for (let i = 0; i < maxColsInRow.value; i++) {
 		table.columns.push(null)
 	}
@@ -104,6 +121,42 @@ const handleSelectColumn = async(idx) => {
 	}
 }
 
+const toggleCheckbox = ({ ev }) => {
+	console.log('🦕 toggleCheckbox', ev)
+	switch (ev) {
+	case 'none': {
+		selectedRows.value = []
+		console.log('\t 🦕 none', selectedRows.value)
+		break
+	}
+	case 'all': {
+		selectedRows.value = 'all'
+		console.log('\t 🦕 all', selectedRows.value)
+		break
+	}
+	default: {
+		selectedRows.value = []
+		tableRef.value.querySelectorAll('input[type=checkbox]').forEach((el, elIdx) => {
+			if (el.checked) {
+				selectedRows.value.push(elIdx)
+			}
+		})
+		console.log('\t 🦕 some', selectedRows.value)
+		break
+	}
+	}
+}
+
+const handleRemoveSelectedRows = () => {
+	if (selectedRows.value === 'all') {
+		csv.value = []
+	} else {
+		csv.value = csv.value
+			.filter((_row, idx) => !selectedRows.value.includes(idx))
+	}
+	onResetCheckbox()
+}
+
 onUpdated(() => {
 	console.log('🦕 onUpdated')
 	if (!table.checkboxes.length) {
@@ -117,69 +170,93 @@ onMounted(() => {
 </script>
 
 <template>
-	<div class="ghost-white table-wrapper">
-		<div class="table-container">
-			<table class="table-custom">
-				<thead
-					v-if="csv"
-					class="table-head"
+	<div class="h-full flex flex-col gap-4">
+		<header class="ghost-white flex flex-wrap justify-between gap-4 p-4">
+			<div class="flex gap-2">
+				<template v-if="!selectedRows.length">
+					<button @click="$emit('reset')">
+						{{ $t('choose-new-file') }}
+					</button>
+				</template>
+				<template v-else>
+					<code>
+						{{ $t('selected') }} {{ selectedRows === 'all' ? csv.length : selectedRows.length }}:
+					</code>
+					<button @click="handleRemoveSelectedRows">
+						{{ $t('remove') }}
+					</button>
+				</template>
+			</div>
+			<div class="flex gap-2">
+				<button
+					disabled
 				>
-					<tr>
-						<th class="col-check">
-							<div class="col-primary-check">
+					{{ $t('save') }}
+				</button>
+			</div>
+		</header>
+
+		<div class="ghost-white table-wrapper">
+			<div class="table-container">
+				<table class="table-custom">
+					<thead
+						v-if="csv"
+						class="table-head"
+					>
+						<tr>
+							<th class="col-check">
 								<input
 									ref="mainCheckboxRef"
 									type="checkbox"
+									:checked="false"
+									:indeterminate="false"
 									@click="handleMainCheckboxCheck"
 								/>
-								<div class="col-primary-check--tool">
-									todo
-								</div>
-							</div>
-						</th>
-						<th
-							v-for="(_col, colIdx) in maxColsInRow"
-							:key="colIdx"
-						>
-							<div class="col-body">
-								<button
-									ref="btnColumnRef"
-									@click="handleSelectColumn(colIdx)"
-								>
-									{{ table.columns[colIdx] ? table.columns[colIdx].name : $t('select-column') }}
-								</button>
-							</div>
-						</th>
-
-						<ColumnPicker
-							ref="columnPickerRef"
-							:fields="fields"
-							:columns="table.columns"
-						/>
-					</tr>
-				</thead>
-				<tbody ref="tableRef">
-					<tr
-						v-for="(row, rowIdx) in csv"
-						:key="rowIdx"
-					>
-						<td class="col-check">
-							<input type="checkbox" />
-						</td>
-						<td
-							v-for="(col, colIdx) in row"
-							:key="colIdx"
-						>
-							<div
-								class="col-body"
-								:title="col"
+							</th>
+							<th
+								v-for="(_col, colIdx) in maxColsInRow"
+								:key="colIdx"
 							>
-								{{ col }}
-							</div>
-						</td>
-					</tr>
-				</tbody>
-			</table>
+								<div class="col-body">
+									<button
+										ref="btnColumnRef"
+										@click="handleSelectColumn(colIdx)"
+									>
+										{{ table.columns[colIdx] ? table.columns[colIdx].name : $t('select-column') }}
+									</button>
+								</div>
+							</th>
+
+							<ColumnPicker
+								ref="columnPickerRef"
+								:fields="fields"
+								:columns="table.columns"
+							/>
+						</tr>
+					</thead>
+					<tbody ref="tableRef">
+						<tr
+							v-for="(row, rowIdx) in csv"
+							:key="rowIdx"
+						>
+							<td class="col-check">
+								<input type="checkbox" />
+							</td>
+							<td
+								v-for="(col, colIdx) in row"
+								:key="colIdx"
+							>
+								<div
+									class="col-body"
+									:title="col"
+								>
+									{{ col }}
+								</div>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
 		</div>
 	</div>
 </template>
@@ -212,6 +289,8 @@ onMounted(() => {
 
 .table-custom th {
 	text-align: left;
+	padding-top: 16px;
+	padding-bottom: 16px;
 }
 
 .col-body {
@@ -222,28 +301,12 @@ onMounted(() => {
 	text-overflow: ellipsis;
 }
 
-.col-primary-check {
-	height: 64px;
-	position: relative;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-.col-primary-check--tool {
-	position: absolute;
-	z-index: 2;
-	/* background-color: red; */
-	width: 100px;
-	height: 100%;
-	left: 100%;
-}
-
 .col-check {
 	position: sticky;
 	left: 0;
 	background-color: white;
-	padding: 0 8px;
+	padding-left: 8px;
+	padding-right: 8px;
 	border-left: 1px solid #e5ebf0;
 }
 </style>
