@@ -98,6 +98,9 @@ const handleSelectColumn = async(idx) => {
 	const result = await columnPickerRef.value.open(target, socks)
 	if (result.ev === 'select') {
 		table.columns[idx] = result.value
+	} else if (result.ev === 'remove') {
+		table.columns.splice(idx, 1)
+		csv.value = csv.value.map(row => row.filter((_el, elIdx) => elIdx !== idx))
 	}
 }
 

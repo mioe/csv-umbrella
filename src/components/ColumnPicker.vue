@@ -52,6 +52,13 @@ function handleSelect(field) {
 	}
 }
 
+function handleRemove() {
+	reset()
+	if (callback.resolve) {
+		callback.reject({ ev: 'remove' })
+	}
+}
+
 function close() {
 	reset()
 	if (callback.reject) {
@@ -94,7 +101,7 @@ defineExpose({
 				</template>
 			</div>
 			<footer class="sticky bottom-0 mt-auto flex flex-shrink-0 flex-col rounded-4 bg-white p-4">
-				<button>
+				<button @click="handleRemove">
 					{{ $t('remove') }}
 				</button>
 			</footer>
