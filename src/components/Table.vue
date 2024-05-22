@@ -1,6 +1,7 @@
 <script setup>
 import { useVModels } from '@vueuse/core'
 import ColumnPicker from '~/components/ColumnPicker.vue'
+import GhostInput from '~/components/GhostInput.vue'
 
 const props = defineProps({
 	csv: Array,
@@ -122,16 +123,13 @@ const handleSelectColumn = async(idx) => {
 }
 
 const toggleCheckbox = ({ ev }) => {
-	console.log('🦕 toggleCheckbox', ev)
 	switch (ev) {
 	case 'none': {
 		selectedRows.value = []
-		console.log('\t 🦕 none', selectedRows.value)
 		break
 	}
 	case 'all': {
 		selectedRows.value = 'all'
-		console.log('\t 🦕 all', selectedRows.value)
 		break
 	}
 	default: {
@@ -141,7 +139,6 @@ const toggleCheckbox = ({ ev }) => {
 				selectedRows.value.push(elIdx)
 			}
 		})
-		console.log('\t 🦕 some', selectedRows.value)
 		break
 	}
 	}
@@ -158,7 +155,6 @@ const handleRemoveSelectedRows = () => {
 }
 
 const handleSave = async() => {
-	console.log('🦕 handleSave')
 	const badColumnIdx = table.columns.map((col, idx) => col ? null : idx).filter(colIdx => colIdx)
 	const cloneCsv = JSON.parse(JSON.stringify(csv.value))
 		.map(row => row.filter((_el, elIdx) => !badColumnIdx.includes(elIdx)))
@@ -168,8 +164,6 @@ const handleSave = async() => {
 		...cloneCsv,
 	]
 
-	console.log('🦕 data', data)
-
 	await fetch('/', {
 		method: 'POST',
 		headers: {
@@ -177,6 +171,16 @@ const handleSave = async() => {
 		},
 		body: JSON.stringify(data),
 	})
+}
+
+const ghostInputRef = shallowRef()
+
+const handleColumnEdit = async(ev, rowIdx, colIdx, val) => {
+	const target = ev.target
+	const result = await ghostInputRef.value.open(target, val)
+	if (result.ev === 'submit') {
+		csv.value[rowIdx][colIdx] = result.value
+	}
 }
 
 onUpdated(() => {
@@ -268,6 +272,7 @@ onMounted(() => {
 							<td
 								v-for="(col, colIdx) in row"
 								:key="colIdx"
+								@click="handleColumnEdit($event, rowIdx, colIdx, col)"
 							>
 								<div
 									class="col-body"
@@ -277,6 +282,7 @@ onMounted(() => {
 								</div>
 							</td>
 						</tr>
+						<GhostInput ref="ghostInputRef" />
 					</tbody>
 				</table>
 			</div>
