@@ -14,6 +14,8 @@ const emit = defineEmits([
 	'reset',
 ])
 
+const HIDDEN_COL = 1 // uuid - first col in rows
+
 const { t: $t } = useI18n()
 const { csv } = useVModels(props, emit)
 
@@ -25,7 +27,9 @@ const table = reactive({
 })
 
 const mainCheckboxRef = shallowRef()
-const maxColsInRow = computed(() => csv.value.reduce((max, row) => Math.max(max, row.length), 0))
+const maxColsInRow = computed(() =>
+	csv.value.reduce((max, row) => Math.max(max, row.length), 0) - HIDDEN_COL,
+)
 const fields = computed(() => [
 	...props.sysField.map(
 		f => ({...f, name: $t(`sys-field-name.${f.name}`)}),
@@ -116,9 +120,12 @@ const handleSelectColumn = async(idx) => {
 	const result = await columnPickerRef.value.open(target, socks)
 	if (result.ev === 'select') {
 		table.columns[idx] = result.value
+		onValidate({ ev: 'select', value: { colIdx: idx } })
 	} else if (result.ev === 'remove') {
 		table.columns.splice(idx, 1)
-		csv.value = csv.value.map(row => row.filter((_el, elIdx) => elIdx !== idx))
+		csv.value = csv.value.map(
+			row => row.filter((_el, elIdx) => elIdx !== idx + HIDDEN_COL),
+		)
 	}
 }
 
@@ -177,10 +184,55 @@ const ghostInputRef = shallowRef()
 
 const handleColumnEdit = async(ev, rowIdx, colIdx, val) => {
 	const target = ev.target
+	if (!table.columns.length) {
+		initColumnSlots()
+	}
 	const result = await ghostInputRef.value.open(target, val)
 	if (result.ev === 'submit') {
+		if (csv.value[rowIdx][colIdx] === result.value) {
+			return
+		}
 		csv.value[rowIdx][colIdx] = result.value
+		onValidate({ ev: 'submit', value: { rowIdx, colIdx, val }})
 	}
+}
+
+const onValidate = (result) => {
+	const { ev, value } = result
+	const { colIdx, val } = value
+	console.log('🦕 onValidate', ev, value)
+
+	if (!table.columns[colIdx]) {
+		console.log('🦕 onValidate', null)
+		return
+	}
+	const typeField = table.columns[colIdx].type
+	if (typeField === 'string') {
+		console.log('🦕 onValidate', typeField)
+		return
+	}
+
+	if (ev === 'select') {
+		onCheckValidColumn(typeField, colIdx)
+	} else if (ev === 'submit') {
+		onCheckValidValue(typeField, colIdx, rowIdx)
+		return
+	}
+}
+
+const onCheckValidColumn = (type, colIdx) => {
+	const idxWithUuid = colIdx + HIDDEN_COL
+	console.log('🦕 onCheckValidColumn', type, colIdx, idxWithUuid)
+	csv.value.forEach((row, rowIdx) => {
+		if (rowIdx === 0) {
+			console.log('🦕 row[0]', row[idxWithUuid], row)
+		}
+	})
+}
+
+const onCheckValidValue = (type, colIdx, rowIdx) => {
+	const idxWithUuid = colIdx + HIDDEN_COL
+	console.log('🦕 onCheckValidValue', type, colIdx, rowIdx, idxWithUuid)
 }
 
 onUpdated(() => {
@@ -264,23 +316,28 @@ onMounted(() => {
 					<tbody ref="tableRef">
 						<tr
 							v-for="(row, rowIdx) in csv"
-							:key="rowIdx"
+							:id="row[0]"
+							:key="row[0]"
 						>
 							<td class="col-check">
 								<input type="checkbox" />
 							</td>
-							<td
+							<template
 								v-for="(col, colIdx) in row"
 								:key="colIdx"
-								@click="handleColumnEdit($event, rowIdx, colIdx, col)"
 							>
-								<div
-									class="col-body"
-									:title="col"
+								<td
+									v-if="colIdx > 0"
+									@click="handleColumnEdit($event, rowIdx, colIdx, col)"
 								>
-									{{ col }}
-								</div>
-							</td>
+									<div
+										class="col-body"
+										:title="col"
+									>
+										{{ col }}
+									</div>
+								</td>
+							</template>
 						</tr>
 						<GhostInput ref="ghostInputRef" />
 					</tbody>

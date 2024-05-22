@@ -6,11 +6,11 @@ useHead({
 	title: 'CSV Umbrella',
 })
 
-const CSVToArray = (data, delimiter = ',', omitFirstRow = false) =>
+const CSVToArrayWithUniqId = (data, delimiter = ',', omitFirstRow = false) =>
 	data
 		.slice(omitFirstRow ? data.indexOf('\n') + 1 : 0)
 		.split('\n')
-		.map(v => v.split(delimiter))
+		.map(v => [crypto.randomUUID(), ...v.split(delimiter)])
 
 const { locale } = useI18n()
 
@@ -83,7 +83,7 @@ onChange(async(files) => {
 
 		reader.onload = ev => {
 			const content = ev.target.result
-			csvData.value = CSVToArray(content)
+			csvData.value = CSVToArrayWithUniqId(content)
 		}
 	}
 })
