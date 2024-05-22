@@ -25,17 +25,17 @@ const sysField = reactive([
 	{
 		name: 'phone',
 		type: 'phone',
-		id: '09195a3e-96d3-4de4-b5df-dd358398fdcd',
+		id: 'phonepho-nephoneph-onep-honephonepho',
 	},
 	{
 		name: 'birthday',
 		type: 'date',
-		id: '99b2f8ec-adf1-44e6-b242-fd9005d6f73c',
+		id: 'birthday-birt-dayb-irth-daybirthdayb',
 	},
 	{
 		name: 'name',
 		type: 'string',
-		id: '0c45dac3-d904-435a-9573-e58f9854cd91',
+		id: 'namename-name-name-name-namenamename',
 	},
 ])
 

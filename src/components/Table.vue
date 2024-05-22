@@ -157,6 +157,26 @@ const handleRemoveSelectedRows = () => {
 	onResetCheckbox()
 }
 
+const handleSave = async() => {
+	console.log('🦕 handleSave')
+	const badColumnIdx = table.columns.map((col, idx) => col ? null : idx).filter(colIdx => colIdx)
+	const cloneCsv = JSON.parse(JSON.stringify(csv.value))
+		.map(row => row.filter((_el, elIdx) => !badColumnIdx.includes(elIdx)))
+	const headerCsv = table.columns.filter(col => col).map(col => col.id)
+	const data = [
+		headerCsv,
+		...cloneCsv,
+	]
+
+	await fetch('/test1', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json;charset=utf-8',
+		},
+		body: JSON.stringify(data),
+	})
+}
+
 onUpdated(() => {
 	console.log('🦕 onUpdated')
 	if (!table.checkboxes.length) {
@@ -189,7 +209,8 @@ onMounted(() => {
 			</div>
 			<div class="flex gap-2">
 				<button
-					disabled
+					:disabled="!table.columns.filter(c => c).length"
+					@click="handleSave"
 				>
 					{{ $t('save') }}
 				</button>
