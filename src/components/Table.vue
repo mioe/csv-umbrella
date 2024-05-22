@@ -168,7 +168,7 @@ const handleSave = async() => {
 		...cloneCsv,
 	]
 
-	await fetch('/test1', {
+	await fetch('https://example.com/', {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json;charset=utf-8',
