@@ -26,6 +26,12 @@ const table = reactive({
 	columns: [],
 })
 
+const invalidCsv = reactive({
+	format: [],
+	localDuplicate: [],
+	removeDuplicate: [],
+})
+
 const mainCheckboxRef = shallowRef()
 const maxColsInRow = computed(() =>
 	csv.value.reduce((max, row) => Math.max(max, row.length), 0) - HIDDEN_COL,
@@ -207,33 +213,73 @@ const onValidate = (result) => {
 		console.log('🦕 onValidate', null)
 		return
 	}
-	const typeField = table.columns[colIdx].type
-	if (typeField === 'string') {
-		console.log('🦕 onValidate', typeField)
+	const field = table.columns[colIdx]
+	if (field.type === 'string') {
+		console.log('🦕 onValidate', field.type)
 		return
 	}
 
 	if (ev === 'select') {
-		onCheckValidColumn(typeField, colIdx)
+		onCheckValidColumn(field, colIdx)
 	} else if (ev === 'submit') {
-		onCheckValidValue(typeField, colIdx, rowIdx)
+		onCheckValidValue(field, colIdx, rowIdx)
 		return
 	}
 }
 
-const onCheckValidColumn = (type, colIdx) => {
-	const idxWithUuid = colIdx + HIDDEN_COL
-	console.log('🦕 onCheckValidColumn', type, colIdx, idxWithUuid)
-	csv.value.forEach((row, rowIdx) => {
-		if (rowIdx === 0) {
-			console.log('🦕 row[0]', row[idxWithUuid], row)
-		}
-	})
+const getRegexByType = (type) => {
+	if (type === 'phone') {
+		return /^\+?[1-9]\d{1,14}$/
+	} else if (type === 'date') {
+		return /^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.(\d{4})$/
+	} else if (type === 'number') {
+		return /^-?\d{1,3}(,\d{3})*(\.\d+)?$/
+	}
+	return null
 }
 
-const onCheckValidValue = (type, colIdx, rowIdx) => {
+const onCheckValidColumn = (field, colIdx) => {
+	const { type } = field
+	const idxWithUuid = colIdx + HIDDEN_COL
+	console.log('🦕 onCheckValidColumn', type, colIdx, idxWithUuid)
+
+	const regex = getRegexByType(type)
+
+	if (!regex) {
+		return
+	}
+
+	if (type === 'phone') {
+		csv.value.forEach((row, rowIdx) => {
+			console.log('🦕 msg', regex.test(row[idxWithUuid].replace(/\D/g, '')))
+			if (!regex.test(row[idxWithUuid].replace(/\D/g, ''))) {
+				onDetectionInvalid({
+					field,
+					invalidType: 'format',
+					rowIdx,
+					colIdxWithUuid: idxWithUuid,
+				})
+			}
+		})
+	}
+}
+
+const onCheckValidValue = (field, colIdx, rowIdx) => {
+	const { type } = field
+
 	const idxWithUuid = colIdx + HIDDEN_COL
 	console.log('🦕 onCheckValidValue', type, colIdx, rowIdx, idxWithUuid)
+}
+
+const onDetectionInvalid = (err) => {
+	console.log('🦕 onDetectionInvalid', err)
+	const {
+		field,
+		invalidType,
+		rowIdx,
+		colIdxWithUuid,
+	} = err
+	invalidCsv[invalidType].push({ field, rowIdx, colIdxWithUuid })
 }
 
 onUpdated(() => {
