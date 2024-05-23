@@ -11,7 +11,7 @@ const floatingArrow = shallowRef()
 const isOpen = computed(() => !!targetRef.value)
 const selectedColumns = computed(() => props.columns.filter(c => c))
 
-const { fields, onAddCustomField } = useFieldStore()
+const { fields, onAddCustomField, customFieldType } = useFieldStore()
 
 const socks = ref()
 const { floatingStyles, middlewareData } = useFloating(

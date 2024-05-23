@@ -59,6 +59,7 @@ async function handleSelectColumn(idx) {
 	const result = await columnPickerRef.value.open(target, socks)
 	if (result.ev === 'select') {
 		table.columns[idx] = result.value
+		onValidate({ ev: 'select', value: { colIdx: idx } })
 	} else if (result.ev === 'remove') {
 		table.columns.splice(idx, 1)
 		csv.value = csv.value.map(
@@ -171,6 +172,7 @@ async function handleColumnEdit(ev, rowId, colIdx, val) {
 			return
 		}
 		fRow[colIdx] = result.value
+		onValidate({ ev: 'submit', value: { rowId, colIdx, val }})
 	}
 }
 
@@ -192,6 +194,101 @@ async function handleSave() {
 		},
 		body: JSON.stringify(data),
 	})
+}
+
+const onValidate = (result) => {
+	const { ev, value } = result
+	const { colIdx } = value
+	console.log('🦕 onValidate', ev, value)
+
+	if (!table.columns[colIdx]) {
+		return
+	}
+	const field = table.columns[colIdx]
+	if (field.type === 'string') {
+		return
+	}
+
+	if (ev === 'select') {
+		onCheckValidColumn(field, colIdx)
+	} else if (ev === 'submit') {
+		onCheckValidValue(field, colIdx, value.rowId)
+		return
+	}
+}
+
+const getRegexByType = (type) => {
+	if (type === 'phone') {
+		return /^\+?[1-9]\d{1,14}$/
+	} else if (type === 'date') {
+		return /^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.(\d{4})$/
+	} else if (type === 'number') {
+		return /^-?\d{1,3}(,\d{3})*(\.\d+)?$/
+	}
+	return null
+}
+
+const onCheckValidColumn = (field, colIdx) => {
+	const { type } = field
+	const colIdxWithUuid = colIdx + HIDDEN_COL
+	const regex = getRegexByType(type)
+
+	if (!regex) {
+		return
+	}
+
+	if (type === 'phone') {
+		csv.value.forEach(row => {
+			if (!regex.test(row[colIdxWithUuid].replace(/\D/g, ''))) {
+				onDetectionInvalid({
+					field,
+					rowId: row[0],
+					colIdxWithUuid,
+				})
+			}
+		})
+	} else {
+		csv.value.forEach(row => {
+			if (!regex.test(row[colIdxWithUuid])) {
+				onDetectionInvalid({
+					field,
+					rowId: row[0],
+					colIdxWithUuid,
+				})
+			}
+		})
+	}
+}
+
+const onCheckValidValue = (field, colIdx, rowId) => {
+	const { type } = field
+
+	const idxWithUuid = colIdx + HIDDEN_COL
+	console.log('🦕 onCheckValidValue', type, colIdx, rowId, idxWithUuid)
+}
+
+const invalidCsv = ref({})
+const onDetectionInvalid = (err) => {
+	const {
+		field,
+		rowId,
+	} = err
+	if (!invalidCsv.value[`${rowId}`]) {
+		invalidCsv.value[`${rowId}`] = []
+	}
+	invalidCsv.value[`${rowId}`].push(field.id)
+}
+
+const getErrorStatusForRow = (rowId) => {
+	return Object.keys(invalidCsv.value).includes(rowId)
+}
+
+const getErrorStatusForCol = (rowId, colIdx) => {
+	if (getErrorStatusForRow(rowId) && table.columns[colIdx - HIDDEN_COL]) {
+		const field = table.columns[colIdx - HIDDEN_COL]
+		return invalidCsv.value[rowId].includes(field.id)
+	}
+	return false
 }
 
 watch(
@@ -266,7 +363,12 @@ onMounted(async() => {
 							:id="row[0]"
 							:key="row[0]"
 						>
-							<td class="t-col-checkbox">
+							<td
+								class="t-col-checkbox"
+								:class="{
+									'bg-red-300': getErrorStatusForRow(row[0])
+								}"
+							>
 								<input
 									:id="row[0]"
 									type="checkbox"
@@ -282,6 +384,9 @@ onMounted(async() => {
 									<div
 										class="t-col-body"
 										:title="col"
+										:class="{
+											'c-red-800 underline': getErrorStatusForCol(row[0], colIdx)
+										}"
 										@click="handleColumnEdit($event, row[0], colIdx, col)"
 									>
 										{{ col }}

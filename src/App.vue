@@ -1,5 +1,4 @@
 <script setup>
-import Table from '~/components/Table.vue'
 import Editor from '~/components/Editor.vue'
 
 useHead({
@@ -70,11 +69,13 @@ onChange(async(files) => {
 	<main class="relative w-dvw flex items-center justify-center h-dvh">
 		<div
 			v-if="!csvFileBody"
-			class="ghost-white min-w-lg flex flex-col items-center justify-center gap-4 p-4"
+			class="ghost-white max-w-md flex flex-col items-center justify-center gap-4 p-4"
 		>
 			<header class="text-center">
 				<h1>CSV Umbrella</h1>
-				<p>{{ $t('about') }}</p>
+				<p class="px-8">
+					{{ $t('about') }}
+				</p>
 			</header>
 
 			<button
@@ -187,14 +188,6 @@ onChange(async(files) => {
 			v-else
 			class="h-[calc(100svh-48px)] w-[calc(100svw-48px)] flex flex-col"
 		>
-			<Table
-				v-if="false"
-				:sys-field="sysField"
-				:custom-field="customField"
-				:csv="csvFileBody"
-				@update:csv="$ev => (csvFileBody = $ev)"
-				@reset="onResetFile"
-			/>
 			<Editor
 				:name="csvFileName"
 				:csv="csvFileBody"
