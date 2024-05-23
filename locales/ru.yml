@@ -17,4 +17,5 @@ select-column: 'Выберете колонку'
 all-selected: 'Все выбрано'
 save: 'Сохранить'
 selected: 'Выбрано'
+of: 'Из'
 

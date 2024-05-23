@@ -39,11 +39,11 @@ function onChangePage(val) {
 }
 
 /**
- * Column and checkbox
+ * Column, row and checkbox
  */
 const btnColumnRef = shallowRef([])
 const columnPickerRef = shallowRef()
-const columnSelected = ref([])
+const rowSelected = ref([])
 
 async function initTableCheckboxInPage() {
 	console.log('🦕 initTableCheckboxInPage')
@@ -55,32 +55,27 @@ async function initTableCheckboxInPage() {
 function handleMainCheckboxCheck(ev) {
 	const { checked } = ev.target
 	if (checked) {
-		columnSelected.value = csv.value.map(row => row[0])
+		rowSelected.value = csv.value.map(row => row[0])
 	} else {
-		columnSelected.value = []
+		rowSelected.value = []
 	}
 }
 
 function onChangeMainCheckbox() {
-	const countChecked = columnSelected.value.length
+	const countChecked = rowSelected.value.length
 	if (countChecked === 0) {
 		tableMainCheckboxRef.value.checked = false
 		tableMainCheckboxRef.value.indeterminate = false
-		// toggleCheckbox({ ev: 'none' })
 	} else if (countChecked === csv.value.length) {
 		tableMainCheckboxRef.value.checked = true
 		tableMainCheckboxRef.value.indeterminate = false
-		// toggleCheckbox({ ev: 'all' })
 	} else {
 		tableMainCheckboxRef.value.checked = false
 		tableMainCheckboxRef.value.indeterminate = true
-		// toggleCheckbox({ ev: 'some' })
 	}
 }
 
 function handleCheck(ev) {
-	console.log('🦕 handleCheck', ev.target.id)
-
 	if (!ev.shiftKey) {
 		const { id, checked } = ev.target
 		onSelectedRows([id], checked)
@@ -88,7 +83,6 @@ function handleCheck(ev) {
 
 	if (!table.lastChecked) {
 		table.lastChecked = ev.target
-		onChangeMainCheckbox()
 		return
 	}
 
@@ -106,19 +100,27 @@ function handleCheck(ev) {
 	}
 
 	table.lastChecked = ev.target
-	onChangeMainCheckbox()
 }
 
 function onSelectedRows(rows, checked) {
 	if (checked) {
-		columnSelected.value = [...new Set([
-			...columnSelected.value,
+		rowSelected.value = [...new Set([
+			...rowSelected.value,
 			...rows,
 		])]
 	} else {
-		columnSelected.value = columnSelected.value
+		rowSelected.value = rowSelected.value
 			.filter(id => !rows.includes(id))
 	}
+	onChangeMainCheckbox()
+}
+
+async function handleRemoveRowSelected() {
+	csv.value = csv.value
+		.filter(row => !rowSelected.value.includes(row[0]))
+	rowSelected.value = []
+	await initTableCheckboxInPage()
+	onChangeMainCheckbox()
 }
 
 
@@ -131,8 +133,8 @@ async function handleSave() {
 
 watch(
 	() => pagination.currentPage,
-	() => {
-		initTableCheckboxInPage()
+	async() => {
+		await initTableCheckboxInPage()
 	},
 )
 
@@ -140,9 +142,9 @@ onUpdated(() => {
 	console.log('🦕 onUpdated')
 })
 
-onMounted(() => {
+onMounted(async() => {
 	console.log('🦕 onMounted')
-	initTableCheckboxInPage()
+	await initTableCheckboxInPage()
 })
 </script>
 
@@ -153,10 +155,13 @@ onMounted(() => {
 			:rows="csv.length"
 			:pages="Math.ceil(csv.length / pagination.sizePage)"
 			:current-page="pagination.currentPage"
+			:row-selected-length="rowSelected.length"
 			@change-page="onChangePage"
 			@reset="$emit('reset')"
 			@save="handleSave"
+			@remove="handleRemoveRowSelected"
 		/>
+
 
 		<div class="ghost-white relative overflow-hidden">
 			<div class="relative h-full overflow-auto">
@@ -194,7 +199,7 @@ onMounted(() => {
 
 					<tbody ref="tableBodyRef">
 						<tr
-							v-for="(row, rowIdx) in paginatedCsv"
+							v-for="row in paginatedCsv"
 							:id="row[0]"
 							:key="row[0]"
 						>
@@ -202,7 +207,7 @@ onMounted(() => {
 								<input
 									:id="row[0]"
 									type="checkbox"
-									:checked="columnSelected.includes(row[0])"
+									:checked="rowSelected.includes(row[0])"
 									@click="handleCheck"
 								/>
 							</td>
