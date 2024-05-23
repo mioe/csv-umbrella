@@ -1,6 +1,7 @@
 <script setup>
 import ColumnPicker from '~/components/ColumnPicker.vue'
 import EditorHeader from '~/components/EditorHeader.vue'
+import GhostInput from '~/components/GhostInput.vue'
 
 const props = defineProps({
 	name: String,
@@ -39,10 +40,23 @@ function onChangePage(val) {
 }
 
 /**
- * Column, row and checkbox
+ * Columns
  */
-const btnColumnRef = shallowRef([])
 const columnPickerRef = shallowRef()
+const btnColumnRef = shallowRef([])
+
+async function initColumnSlots() {
+	console.log('🦕 initColumnSlots')
+	await nextTick()
+	table.columns = []
+	for (let i = 0; i < maxColsInRow.value; i++) {
+		table.columns.push(null)
+	}
+}
+
+/**
+ * Rows and checkbox
+ */
 const rowSelected = ref([])
 
 async function initTableCheckboxInPage() {
@@ -123,10 +137,24 @@ async function handleRemoveRowSelected() {
 	onChangeMainCheckbox()
 }
 
-
 /**
  * Data
  */
+const ghostInputRef = shallowRef()
+
+async function handleColumnEdit(ev, rowIdx, colIdx, val) {
+	console.log('🦕 handleColumnEdit')
+	const target = ev.target
+
+	const result = await ghostInputRef.value.open(target, val)
+	if (result.ev === 'submit') {
+		if (csv.value[rowIdx][colIdx] === result.value) {
+			return
+		}
+		csv.value[rowIdx][colIdx] = result.value
+	}
+}
+
 async function handleSave() {
 	console.log('🦕 handleSave')
 }
@@ -145,6 +173,7 @@ onUpdated(() => {
 onMounted(async() => {
 	console.log('🦕 onMounted')
 	await initTableCheckboxInPage()
+	await initColumnSlots()
 })
 </script>
 
@@ -199,7 +228,7 @@ onMounted(async() => {
 
 					<tbody ref="tableBodyRef">
 						<tr
-							v-for="row in paginatedCsv"
+							v-for="(row, rowIdx) in paginatedCsv"
 							:id="row[0]"
 							:key="row[0]"
 						>
@@ -219,12 +248,17 @@ onMounted(async() => {
 									<div
 										class="t-col-body"
 										:title="col"
+										@click="handleColumnEdit($event, rowIdx, colIdx, col)"
 									>
 										{{ col }}
 									</div>
 								</td>
 							</template>
 						</tr>
+
+						<GhostInput
+							ref="ghostInputRef"
+						/>
 					</tbody>
 				</table>
 			</div>
