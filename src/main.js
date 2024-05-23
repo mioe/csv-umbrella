@@ -10,6 +10,7 @@ import './style.css'
 /**
  * Modules
  */
+import { pinia } from './modules/pinia'
 import { head } from './modules/unhead'
 import { i18n, loadLanguageAsync, getDefaultLocale } from './modules/vue-i18n'
 
@@ -19,6 +20,7 @@ import { i18n, loadLanguageAsync, getDefaultLocale } from './modules/vue-i18n'
 createApp(App)
 	.use(i18n)
 	.use(head)
+	.use(pinia)
 	.mount('#app')
 
 /**

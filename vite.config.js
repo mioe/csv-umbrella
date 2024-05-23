@@ -49,10 +49,10 @@ export default defineConfig(({ command, mode }) => {
 					unheadVueComposablesImports,
 				],
 				dts: 'src/auto-imports.d.ts',
-				// dirs: [
-				// 	'src/composables',
-				// 	'src/stores',
-				// ],
+				dirs: [
+					'src/composables',
+					'src/stores',
+				],
 				vueTemplate: true,
 			}),
 

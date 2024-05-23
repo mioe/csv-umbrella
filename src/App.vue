@@ -6,15 +6,10 @@ useHead({
 	title: 'CSV Umbrella',
 })
 
-const CSVToArrayWithUniqId = (data, delimiter = ',', omitFirstRow = false) =>
-	data
-		.slice(omitFirstRow ? data.indexOf('\n') + 1 : 0)
-		.split('\n')
-		.filter(v => v.length)
-		.map(v => [crypto.randomUUID(), ...v.split(delimiter)])
-
+/**
+ * Locale
+ */
 const { locale } = useI18n()
-
 async function toggleLocales() {
 	const locales = availableLocales
 	const newLocale = locales[(locales.indexOf(locale.value) + 1) % locales.length]
@@ -22,26 +17,16 @@ async function toggleLocales() {
 	locale.value = newLocale
 }
 
-const sysField = reactive([
-	{
-		name: 'phone',
-		type: 'phone',
-		id: 'phonepho-nephoneph-onep-honephonepho',
-	},
-	{
-		name: 'birthday',
-		type: 'date',
-		id: 'birthday-birt-dayb-irth-daybirthdayb',
-	},
-	{
-		name: 'name',
-		type: 'string',
-		id: 'namename-name-name-name-namenamename',
-	},
-])
-
-const customField = useStorage('csv-custom-field', [])
-const customFieldType = ['string', 'date', 'number']
+/**
+ * Field
+ */
+const {
+	sysField,
+	customField,
+	customFieldType,
+	onAddCustomField,
+	onRemoveCustomFieldById,
+} = useFieldStore()
 const customFieldForm = reactive({
 	name: null,
 	type: null,
@@ -53,25 +38,21 @@ function onResetCustomFieldForm() {
 }
 function handleAddCustomField() {
 	const { name, type } = customFieldForm
-	customField.value.push({
-		name,
-		type: type ?? customFieldType[0],
-		id: crypto.randomUUID(),
-	})
+	onAddCustomField({ name, type })
 	onResetCustomFieldForm()
 }
 function handleRemoveCustomFieldById(id) {
-	const fFieldIdx = customField.value.findIndex((field) => field.id === id)
-	customField.value.splice(fFieldIdx, 1)
+	onRemoveCustomFieldById(id)
 }
 
+/**
+ * CSV file
+ */
 const { files, open, reset, onChange } = useFileDialog({
 	accept: '.csv',
 	multiple: false,
 })
-
 const csvData = ref()
-
 function onResetFile() {
 	reset()
 	csvData.value = undefined
@@ -84,7 +65,7 @@ onChange(async(files) => {
 
 		reader.onload = ev => {
 			const content = ev.target.result
-			csvData.value = CSVToArrayWithUniqId(content)
+			csvData.value = useCsvToArrayWithUniqId(content)
 		}
 	}
 })
