@@ -164,7 +164,8 @@ const handleRemoveSelectedRows = () => {
 const handleSave = async() => {
 	const badColumnIdx = table.columns.map((col, idx) => col ? null : idx).filter(colIdx => colIdx)
 	const cloneCsv = JSON.parse(JSON.stringify(csv.value))
-		.map(row => row.filter((_el, elIdx) => !badColumnIdx.includes(elIdx)))
+		.map(row => row.filter((_col, colIdx) => colIdx > 0))
+		.map(row => row.filter((_col, colIdx) => !badColumnIdx.includes(colIdx)))
 	const headerCsv = table.columns.filter(col => col).map(col => col.id)
 	const data = [
 		headerCsv,
