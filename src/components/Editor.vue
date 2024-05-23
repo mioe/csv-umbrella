@@ -52,6 +52,15 @@ async function initTableCheckboxInPage() {
 	table.checkboxes = tableBodyRef.value.querySelectorAll('input[type="checkbox"]')
 }
 
+function handleMainCheckboxCheck(ev) {
+	const { checked } = ev.target
+	if (checked) {
+		columnSelected.value = csv.value.map(row => row[0])
+	} else {
+		columnSelected.value = []
+	}
+}
+
 function onChangeMainCheckbox() {
 	const countChecked = columnSelected.value.length
 	if (countChecked === 0) {
@@ -72,6 +81,11 @@ function onChangeMainCheckbox() {
 function handleCheck(ev) {
 	console.log('🦕 handleCheck', ev.target.id)
 
+	if (!ev.shiftKey) {
+		const { id, checked } = ev.target
+		onSelectedRows([id], checked)
+	}
+
 	if (!table.lastChecked) {
 		table.lastChecked = ev.target
 		onChangeMainCheckbox()
@@ -81,15 +95,30 @@ function handleCheck(ev) {
 	if (ev.shiftKey) {
 		const start = Array.from(table.checkboxes).indexOf(ev.target)
 		const end = Array.from(table.checkboxes).indexOf(table.lastChecked)
+		const rows = []
 		table.checkboxes.forEach((box, idx) => {
 			if (idx >= Math.min(start, end) && idx <= Math.max(start, end)) {
 				box.checked = table.lastChecked.checked
+				rows.push(box.id)
 			}
 		})
+		onSelectedRows(rows, table.lastChecked.checked)
 	}
 
 	table.lastChecked = ev.target
 	onChangeMainCheckbox()
+}
+
+function onSelectedRows(rows, checked) {
+	if (checked) {
+		columnSelected.value = [...new Set([
+			...columnSelected.value,
+			...rows,
+		])]
+	} else {
+		columnSelected.value = columnSelected.value
+			.filter(id => !rows.includes(id))
+	}
 }
 
 
@@ -138,6 +167,7 @@ onMounted(() => {
 								<input
 									ref="tableMainCheckboxRef"
 									type="checkbox"
+									@click="handleMainCheckboxCheck"
 								/>
 							</th>
 							<th
@@ -172,6 +202,7 @@ onMounted(() => {
 								<input
 									:id="row[0]"
 									type="checkbox"
+									:checked="columnSelected.includes(row[0])"
 									@click="handleCheck"
 								/>
 							</td>
