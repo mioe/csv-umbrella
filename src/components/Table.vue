@@ -241,7 +241,6 @@ const getRegexByType = (type) => {
 const onCheckValidColumn = (field, colIdx) => {
 	const { type } = field
 	const idxWithUuid = colIdx + HIDDEN_COL
-	console.log('🦕 onCheckValidColumn', type, colIdx, idxWithUuid)
 
 	const regex = getRegexByType(type)
 
@@ -251,7 +250,6 @@ const onCheckValidColumn = (field, colIdx) => {
 
 	if (type === 'phone') {
 		csv.value.forEach((row, rowIdx) => {
-			console.log('🦕 msg', regex.test(row[idxWithUuid].replace(/\D/g, '')))
 			if (!regex.test(row[idxWithUuid].replace(/\D/g, ''))) {
 				onDetectionInvalid({
 					field,
@@ -272,7 +270,6 @@ const onCheckValidValue = (field, colIdx, rowIdx) => {
 }
 
 const onDetectionInvalid = (err) => {
-	console.log('🦕 onDetectionInvalid', err)
 	const {
 		field,
 		invalidType,
