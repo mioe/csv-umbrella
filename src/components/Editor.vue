@@ -130,6 +130,11 @@ function onSelectedRows(rows, checked) {
 }
 
 async function handleRemoveRowSelected() {
+	if (csv.value.length === rowSelected.value.length) {
+		emit('reset')
+		return
+	}
+
 	csv.value = csv.value
 		.filter(row => !rowSelected.value.includes(row[0]))
 	rowSelected.value = []
@@ -142,16 +147,17 @@ async function handleRemoveRowSelected() {
  */
 const ghostInputRef = shallowRef()
 
-async function handleColumnEdit(ev, rowIdx, colIdx, val) {
+async function handleColumnEdit(ev, rowId, colIdx, val) {
 	console.log('🦕 handleColumnEdit')
 	const target = ev.target
 
 	const result = await ghostInputRef.value.open(target, val)
 	if (result.ev === 'submit') {
-		if (csv.value[rowIdx][colIdx] === result.value) {
+		const fRow = csv.value.find(row => row[0] === rowId)
+		if (fRow[colIdx] === result.value) {
 			return
 		}
-		csv.value[rowIdx][colIdx] = result.value
+		fRow[colIdx] = result.value
 	}
 }
 
@@ -228,7 +234,7 @@ onMounted(async() => {
 
 					<tbody ref="tableBodyRef">
 						<tr
-							v-for="(row, rowIdx) in paginatedCsv"
+							v-for="row in paginatedCsv"
 							:id="row[0]"
 							:key="row[0]"
 						>
@@ -248,7 +254,7 @@ onMounted(async() => {
 									<div
 										class="t-col-body"
 										:title="col"
-										@click="handleColumnEdit($event, rowIdx, colIdx, col)"
+										@click="handleColumnEdit($event, row[0], colIdx, col)"
 									>
 										{{ col }}
 									</div>
