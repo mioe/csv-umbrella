@@ -2,7 +2,6 @@
 import { useFloating, arrow, offset } from '@floating-ui/vue'
 
 const props = defineProps({
-	fields: Array,
 	columns: Array,
 })
 
@@ -11,6 +10,8 @@ const floatingRef = shallowRef()
 const floatingArrow = shallowRef()
 const isOpen = computed(() => !!targetRef.value)
 const selectedColumns = computed(() => props.columns.filter(c => c))
+
+const { fields, onAddCustomField } = useFieldStore()
 
 const socks = ref()
 const { floatingStyles, middlewareData } = useFloating(
@@ -68,6 +69,29 @@ function close() {
 
 onClickOutside(floatingRef, () => close())
 
+const customFieldForm = reactive({
+	isShow: null,
+	name: null,
+	type: null,
+})
+
+function handleShowFormCustomField() {
+	customFieldForm.isShow = true
+}
+
+function onResetCustomFieldForm() {
+	Object.keys(customFieldForm).forEach((key) => {
+		customFieldForm[key] = null
+	})
+}
+
+function handleAddCustomField() {
+	const { name, type } = customFieldForm
+	const field = onAddCustomField({ name, type })
+	onResetCustomFieldForm()
+	handleSelect(field)
+}
+
 defineExpose({
 	open,
 })
@@ -100,7 +124,45 @@ defineExpose({
 					</button>
 				</template>
 			</div>
-			<footer class="sticky bottom-0 mt-auto flex flex-shrink-0 flex-col rounded-4 bg-white p-4">
+			<footer class="sticky bottom-0 mt-auto flex flex-shrink-0 flex-col gap-2 rounded-4 bg-white p-4">
+				<button
+					v-if="!customFieldForm.isShow"
+					@click="handleShowFormCustomField"
+				>
+					{{ $t('add') }}
+				</button>
+				<form
+					v-else
+					class="flex flex-col gap-2"
+					@submit.prevent="handleAddCustomField"
+				>
+					<input
+						v-model="customFieldForm.name"
+						type="text"
+						:placeholder="$t('new-field-name')"
+						required
+					/>
+					<select
+						v-model="customFieldForm.type"
+					>
+						<option
+							:value="null"
+							disabled
+						>
+							{{ $t('type-field') }}
+						</option>
+						<option
+							v-for="t in customFieldType"
+							:key="t"
+							:value="t"
+						>
+							{{ t }}
+						</option>
+					</select>
+					<button type="submit">
+						{{ $t('add') }}
+					</button>
+				</form>
 				<button @click="handleRemove">
 					{{ $t('remove') }}
 				</button>

@@ -34,11 +34,13 @@ export const useFieldStore = defineStore('field', () => {
 	])
 
 	function onAddCustomField({ name, type }) {
-		customField.value.push({
+		const field = {
 			name,
 			type: type ?? customFieldType[0],
 			id: crypto.randomUUID(),
-		})
+		}
+		customField.value.push(field)
+		return customField.value.find(f => f.id === field.id)
 	}
 
 	function onRemoveCustomFieldById(id) {

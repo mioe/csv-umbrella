@@ -9,7 +9,6 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:csv', 'reset'])
 const { csv } = useVModels(props, emit)
-const { fields } = useFieldStore()
 
 const HIDDEN_COL = 1 // uuid - first col in rows
 
@@ -51,6 +50,20 @@ async function initColumnSlots() {
 	table.columns = []
 	for (let i = 0; i < maxColsInRow.value; i++) {
 		table.columns.push(null)
+	}
+}
+
+async function handleSelectColumn(idx) {
+	const target = btnColumnRef.value[idx]
+	const socks = table.columns[idx]
+	const result = await columnPickerRef.value.open(target, socks)
+	if (result.ev === 'select') {
+		table.columns[idx] = result.value
+	} else if (result.ev === 'remove') {
+		table.columns.splice(idx, 1)
+		csv.value = csv.value.map(
+			row => row.filter((_el, elIdx) => elIdx !== idx + HIDDEN_COL),
+		)
 	}
 }
 
@@ -226,7 +239,6 @@ onMounted(async() => {
 
 							<ColumnPicker
 								ref="columnPickerRef"
-								:fields="fields"
 								:columns="table.columns"
 							/>
 						</tr>
