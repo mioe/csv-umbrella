@@ -176,6 +176,22 @@ async function handleColumnEdit(ev, rowId, colIdx, val) {
 
 async function handleSave() {
 	console.log('🦕 handleSave')
+	const invalidColumns = table.columns.map((col, idx) => col ? null : idx).filter(colIdx => colIdx)
+	const bodyCsv = JSON.parse(JSON.stringify(csv.value))
+		.map(row => row.filter((_col, colIdx) => !invalidColumns.includes(colIdx - HIDDEN_COL)))
+	const headerCsv = table.columns.filter(col => col).map(col => col.id)
+	const data = [
+		['uuid', ...headerCsv],
+		...bodyCsv,
+	]
+
+	await fetch('/', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json;charset=utf-8',
+		},
+		body: JSON.stringify(data),
+	})
 }
 
 watch(

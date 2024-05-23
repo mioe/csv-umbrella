@@ -42,7 +42,7 @@ const { toggleLocales } = useLocaleStore()
 				</button>
 			</div>
 			<div class="flex flex-wrap gap-2">
-				<button @click="save">
+				<button @click="$emit('save')">
 					{{ $t('save') }}
 				</button>
 				<button @click="toggleLocales">
