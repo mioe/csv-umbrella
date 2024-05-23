@@ -1,6 +1,7 @@
 <script setup>
 import { availableLocales, loadLanguageAsync } from '~/modules/vue-i18n'
 import Table from '~/components/Table.vue'
+import Editor from '~/components/Editor.vue'
 
 useHead({
 	title: 'CSV Umbrella',
@@ -48,14 +49,16 @@ function handleRemoveCustomFieldById(id) {
 /**
  * CSV file
  */
-const { files, open, reset, onChange } = useFileDialog({
+const { open, reset, onChange } = useFileDialog({
 	accept: '.csv',
 	multiple: false,
 })
-const csvData = ref()
+const csvFileName = ref()
+const csvFileBody = ref()
 function onResetFile() {
 	reset()
-	csvData.value = undefined
+	csvFileName.value = undefined
+	csvFileBody.value = undefined
 }
 
 onChange(async(files) => {
@@ -65,7 +68,8 @@ onChange(async(files) => {
 
 		reader.onload = ev => {
 			const content = ev.target.result
-			csvData.value = useCsvToArrayWithUniqId(content)
+			csvFileName.value = files[0].name
+			csvFileBody.value = useCsvToArrayWithUniqId(content)
 		}
 	}
 })
@@ -74,7 +78,7 @@ onChange(async(files) => {
 <template>
 	<main class="relative w-dvw flex items-center justify-center h-dvh">
 		<div
-			v-if="!files"
+			v-if="!csvFileBody"
 			class="ghost-white min-w-lg flex flex-col items-center justify-center gap-4 p-4"
 		>
 			<header class="text-center">
@@ -193,10 +197,17 @@ onChange(async(files) => {
 			class="h-[calc(100svh-48px)] w-[calc(100svw-48px)] flex flex-col"
 		>
 			<Table
+				v-if="false"
 				:sys-field="sysField"
 				:custom-field="customField"
-				:csv="csvData"
-				@update:csv="$ev => (csvData = $ev)"
+				:csv="csvFileBody"
+				@update:csv="$ev => (csvFileBody = $ev)"
+				@reset="onResetFile"
+			/>
+			<Editor
+				:name="csvFileName"
+				:csv="csvFileBody"
+				@update:csv="$ev => (csvFileBody = $ev)"
 				@reset="onResetFile"
 			/>
 		</div>
