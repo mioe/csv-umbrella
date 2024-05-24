@@ -162,7 +162,6 @@ async function handleRemoveRowSelected() {
 const ghostInputRef = shallowRef()
 
 async function handleColumnEdit(ev, rowId, colIdx, val) {
-	console.log('🦕 handleColumnEdit')
 	const target = ev.target
 
 	const result = await ghostInputRef.value.open(target, val)
@@ -172,12 +171,11 @@ async function handleColumnEdit(ev, rowId, colIdx, val) {
 			return
 		}
 		fRow[colIdx] = result.value
-		onValidate({ ev: 'submit', value: { rowId, colIdx, val }})
+		onValidate({ ev: 'submit', value: { rowId, colIdx: colIdx - HIDDEN_COL, val: result.value }})
 	}
 }
 
 async function handleSave() {
-	console.log('🦕 handleSave')
 	const invalidColumns = table.columns.map((col, idx) => col ? null : idx).filter(colIdx => colIdx)
 	const bodyCsv = JSON.parse(JSON.stringify(csv.value))
 		.map(row => row.filter((_col, colIdx) => !invalidColumns.includes(colIdx - HIDDEN_COL)))
@@ -196,10 +194,9 @@ async function handleSave() {
 	})
 }
 
-const onValidate = (result) => {
+function onValidate(result) {
 	const { ev, value } = result
 	const { colIdx } = value
-	console.log('🦕 onValidate', ev, value)
 
 	if (!table.columns[colIdx]) {
 		return
@@ -212,8 +209,7 @@ const onValidate = (result) => {
 	if (ev === 'select') {
 		onCheckValidColumn(field, colIdx)
 	} else if (ev === 'submit') {
-		onCheckValidValue(field, colIdx, value.rowId)
-		return
+		onCheckValidValue(field, value.rowId, value.val)
 	}
 }
 
@@ -228,10 +224,18 @@ const getRegexByType = (type) => {
 	return null
 }
 
-const onCheckValidColumn = (field, colIdx) => {
+const getCheckValidHead = (field) => {
 	const { type } = field
-	const colIdxWithUuid = colIdx + HIDDEN_COL
 	const regex = getRegexByType(type)
+	return { regex, type }
+}
+
+function onCheckValidColumn(field, colIdx) {
+	const colIdxWithUuid = colIdx + HIDDEN_COL
+	const {
+		regex,
+		type,
+	} = getCheckValidHead(field)
 
 	if (!regex) {
 		return
@@ -243,7 +247,6 @@ const onCheckValidColumn = (field, colIdx) => {
 				onDetectionInvalid({
 					field,
 					rowId: row[0],
-					colIdxWithUuid,
 				})
 			}
 		})
@@ -253,43 +256,88 @@ const onCheckValidColumn = (field, colIdx) => {
 				onDetectionInvalid({
 					field,
 					rowId: row[0],
-					colIdxWithUuid,
 				})
 			}
 		})
 	}
 }
 
-const onCheckValidValue = (field, colIdx, rowId) => {
-	const { type } = field
+function onCheckValidValue(field, rowId, val) {
+	const {
+		regex,
+		type,
+	} = getCheckValidHead(field)
 
-	const idxWithUuid = colIdx + HIDDEN_COL
-	console.log('🦕 onCheckValidValue', type, colIdx, rowId, idxWithUuid)
+	if (!regex) {
+		return
+	}
+
+	if (type === 'phone') {
+		if (!regex.test(val.replace(/\D/g, ''))) {
+			onDetectionInvalid({
+				field,
+				rowId,
+			})
+		} else {
+			onResetInvalid([field.id])
+		}
+	} else {
+		if (!regex.test(val)) {
+			onDetectionInvalid({
+				field,
+				rowId,
+			})
+		} else {
+			onResetInvalid([field.id])
+		}
+	}
 }
 
-const invalidCsv = ref({})
-const onDetectionInvalid = (err) => {
-	const {
-		field,
-		rowId,
-	} = err
-	if (!invalidCsv.value[`${rowId}`]) {
-		invalidCsv.value[`${rowId}`] = []
+const invalidCsv = reactive({})
+
+function onDetectionInvalid(err) {
+	const { field, rowId } = err
+	if (!invalidCsv[`${rowId}`]) {
+		invalidCsv[`${rowId}`] = []
 	}
-	invalidCsv.value[`${rowId}`].push(field.id)
+	invalidCsv[`${rowId}`].push(field.id)
+}
+
+function onResetInvalid(colIds) {
+	Object.keys(invalidCsv).forEach(key => {
+		const newInvalidStatus = invalidCsv[key].filter(colId => !colIds.includes(colId))
+		if (!newInvalidStatus.length) {
+			delete invalidCsv[key]
+		} else {
+			invalidCsv[key] = newInvalidStatus
+		}
+	})
 }
 
 const getErrorStatusForRow = (rowId) => {
-	return Object.keys(invalidCsv.value).includes(rowId)
+	return Object.keys(invalidCsv).includes(rowId)
 }
 
 const getErrorStatusForCol = (rowId, colIdx) => {
 	if (getErrorStatusForRow(rowId) && table.columns[colIdx - HIDDEN_COL]) {
 		const field = table.columns[colIdx - HIDDEN_COL]
-		return invalidCsv.value[rowId].includes(field.id)
+		return invalidCsv[rowId].includes(field.id)
 	}
 	return false
 }
+
+watch(
+	() => ([...table.columns]),
+	async(newVal, oldVal) => {
+		const oldColumns = oldVal.filter(c => c).map(c => c.id)
+		const newColumns = newVal.filter(c => c).map(c => c.id)
+		const diff = oldColumns.filter(cId => !newColumns.includes(cId))
+		onResetInvalid(diff)
+	},
+	{
+		deep: true,
+	},
+)
 
 watch(
 	() => pagination.currentPage,
@@ -362,6 +410,9 @@ onMounted(async() => {
 							v-for="row in paginatedCsv"
 							:id="row[0]"
 							:key="row[0]"
+							:class="{
+								'bg-red-300': getErrorStatusForRow(row[0])
+							}"
 						>
 							<td
 								class="t-col-checkbox"
