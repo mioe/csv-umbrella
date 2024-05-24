@@ -151,6 +151,8 @@ async function handleRemoveRowSelected() {
 
 	csv.value = csv.value
 		.filter(row => !rowSelected.value.includes(row[0]))
+
+	onRemoveInvalidRows(rowSelected.value)
 	rowSelected.value = []
 	await initTableCheckboxInPage()
 	onChangeMainCheckbox()
@@ -178,10 +180,11 @@ async function handleColumnEdit(ev, rowId, colIdx, val) {
 async function handleSave() {
 	const invalidColumns = table.columns.map((col, idx) => col ? null : idx).filter(colIdx => colIdx)
 	const bodyCsv = JSON.parse(JSON.stringify(csv.value))
-		.map(row => row.filter((_col, colIdx) => !invalidColumns.includes(colIdx - HIDDEN_COL)))
+		.map(row => row.filter((_col, colIdx) => colIdx > 0))
+		.map(row => row.filter((_col, colIdx) => !invalidColumns.includes(colIdx)))
 	const headerCsv = table.columns.filter(col => col).map(col => col.id)
 	const data = [
-		['uuid', ...headerCsv],
+		headerCsv,
 		...bodyCsv,
 	]
 
@@ -311,6 +314,13 @@ function onResetInvalid(colIds) {
 		} else {
 			invalidCsv[key] = newInvalidStatus
 		}
+	})
+}
+
+function onRemoveInvalidRows(rowIds) {
+	const diff = Object.keys(invalidCsv).filter(rowId => rowIds.includes(rowId))
+	diff.forEach(rowId => {
+		delete invalidCsv[rowId]
 	})
 }
 
