@@ -1,7 +1,6 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { useStorage } from '@vueuse/core'
 import { reactive } from 'vue'
-import { useI18n } from 'vue-i18n'
 
 export const useFieldStore = defineStore('field', () => {
 	const sysField = reactive([
@@ -25,14 +24,6 @@ export const useFieldStore = defineStore('field', () => {
 	const customField = useStorage('csv-custom-field', [])
 	const customFieldType = ['string', 'date', 'number']
 
-	const { t: $t } = useI18n()
-	const fields = computed(() => [
-		...sysField.map(
-			f => ({...f, name: $t(`sys-field-name.${f.name}`)}),
-		),
-		...customField.value,
-	])
-
 	function onAddCustomField({ name, type }) {
 		const field = {
 			name,
@@ -52,7 +43,6 @@ export const useFieldStore = defineStore('field', () => {
 		sysField,
 		customField,
 		customFieldType,
-		fields,
 
 		onAddCustomField,
 		onRemoveCustomFieldById,

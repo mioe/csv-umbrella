@@ -11,7 +11,15 @@ const floatingArrow = shallowRef()
 const isOpen = computed(() => !!targetRef.value)
 const selectedColumns = computed(() => props.columns.filter(c => c))
 
-const { fields, onAddCustomField, customFieldType } = useFieldStore()
+const { sysField, customField, onAddCustomField, customFieldType } = useFieldStore()
+
+const { t: $t } = useI18n()
+const fields = computed(() => [
+	...sysField.map(
+		f => ({...f, name: $t(`sys-field-name.${f.name}`)}),
+	),
+	...customField,
+])
 
 const socks = ref()
 const { floatingStyles, middlewareData } = useFloating(
